@@ -88,6 +88,25 @@
                 display: none;
             }
 
+            .chatbot-badge {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background-color: #ef4444;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                padding: 4px 8px;
+                border-radius: 12px;
+                min-width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+
             /* Chat Widget Container */
             .chatbot-widget {
                 position: fixed;
@@ -336,6 +355,7 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
+                <div id="chatbot-badge" class="chatbot-badge" style="display: none;">0</div>
             </button>
 
             <!-- Chat Widget -->
@@ -366,6 +386,8 @@
             this.inputField = document.getElementById('chatbot-input');
             this.sendButton = document.getElementById('chatbot-send-btn');
             this.history = [];
+            this.unreadCount = 0;
+            this.isOpen = false;
 
             this.init();
 
@@ -448,6 +470,39 @@
 
             this.messagesContainer.appendChild(container);
             this.scrollToBottom();
+
+            if (sender === 'bot' && !this.isOpen) {
+                this.incrementUnreadCount();
+            }
+        }
+
+        incrementUnreadCount() {
+            this.unreadCount++;
+            this.updateBadge();
+        }
+
+        resetUnreadCount() {
+            this.unreadCount = 0;
+            this.updateBadge();
+        }
+
+        updateBadge() {
+            const badge = document.getElementById('chatbot-badge');
+            if (badge) {
+                if (this.unreadCount > 0) {
+                    badge.textContent = this.unreadCount;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        setOpen(isOpen) {
+            this.isOpen = isOpen;
+            if (isOpen) {
+                this.resetUnreadCount();
+            }
         }
 
         setLoading(isLoading) {
@@ -503,6 +558,7 @@
             toggleBtn.addEventListener('click', () => {
                 widget.classList.add('chatbot-open');
                 toggleBtn.classList.add('chatbot-hidden');
+                chatWidget.setOpen(true);
             });
         }
 
@@ -512,6 +568,7 @@
                 if (toggleBtn) {
                     toggleBtn.classList.remove('chatbot-hidden');
                 }
+                chatWidget.setOpen(false);
             });
         }
     }
