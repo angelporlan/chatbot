@@ -23,7 +23,10 @@ class ChatWidget {
         this.inputField.value = '';
         this.setLoading(true);
 
+        this.showTypingIndicator();
+
         setTimeout(() => {
+            this.hideTypingIndicator();
             this.addMessage("Hola, soy un bot", "bot");
             this.setLoading(false);
         }, 2000);
@@ -72,6 +75,22 @@ class ChatWidget {
 
     scrollToBottom() {
         this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    }
+
+    showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.classList.add('typing-indicator');
+        typingDiv.id = 'typing-indicator';
+        typingDiv.innerHTML = '<span></span><span></span><span></span>';
+        this.messagesContainer.appendChild(typingDiv);
+        this.scrollToBottom();
+    }
+
+    hideTypingIndicator() {
+        const typingDiv = document.getElementById('typing-indicator');
+        if (typingDiv) {
+            typingDiv.remove();
+        }
     }
 }
 
