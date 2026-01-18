@@ -4,9 +4,37 @@
     const currentScript = document.currentScript || document.querySelector('script[data-api]');
     const config = {
         apiUrl: currentScript?.getAttribute('data-api') || 'http://localhost:3000',
-        tenant: currentScript?.getAttribute('data-tenant') || 'default',
+        tenantId: currentScript?.getAttribute('data-tenant') || 'tenant-1',
+        primaryColor: currentScript?.getAttribute('data-primary-color') || '#6366f1',
+        secondaryColor: currentScript?.getAttribute('data-secondary-color') || '#ffffff',
+        tertiaryColor: currentScript?.getAttribute('data-tertiary-color') || '#f8f9fa',
+        fontFamily: currentScript?.getAttribute('data-font-family') || 'Inter, system-ui, -apple-system, sans-serif',
+        userBubbleColor: currentScript?.getAttribute('data-user-bubble-color') || currentScript?.getAttribute('data-primary-color') || '#6366f1',
+        botBubbleColor: currentScript?.getAttribute('data-bot-bubble-color') || '#e5e7eb',
+        textColor: currentScript?.getAttribute('data-text-color') || '#1f2937',
+        initialMessage: currentScript?.getAttribute('data-initial-message') || '¡Hola! ¿Cómo puedo ayudarte hoy?',
         botAvatar: currentScript?.getAttribute('data-bot-avatar') || null
     };
+
+    function adjustColorBrightness(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+            (B < 255 ? B < 1 ? 0 : B : 255))
+            .toString(16).slice(1);
+    }
+
+    function getContrastColor(hexColor) {
+        const r = parseInt(hexColor.substr(1, 2), 16);
+        const g = parseInt(hexColor.substr(3, 2), 16);
+        const b = parseInt(hexColor.substr(5, 2), 16);
+        const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        return brightness > 155 ? '#000000' : '#ffffff';
+    }
 
     function injectStyles() {
         const styleId = 'chatbot-widget-styles';
@@ -17,15 +45,16 @@
         style.textContent = `
             /* Chatbot Widget Styles */
             :root {
-                --chatbot-primary: #6366f1;
-                --chatbot-primary-hover: #4f46e5;
-                --chatbot-bg: #ffffff;
-                --chatbot-text-main: #1f2937;
+                --chatbot-primary: ${config.primaryColor};
+                --chatbot-primary-hover: ${adjustColorBrightness(config.primaryColor, -20)};
+                --chatbot-bg: ${config.secondaryColor};
+                --chatbot-text-main: ${config.textColor};
                 --chatbot-text-secondary: #6b7280;
-                --chatbot-user-msg-bg: #6366f1;
-                --chatbot-user-msg-text: #ffffff;
-                --chatbot-bot-msg-bg: #e5e7eb;
-                --chatbot-bot-msg-text: #1f2937;
+                --chatbot-user-msg-bg: ${config.userBubbleColor};
+                --chatbot-user-msg-text: ${getContrastColor(config.userBubbleColor)};
+                --chatbot-bot-msg-bg: ${config.botBubbleColor};
+                --chatbot-bot-msg-text: ${config.textColor};
+                --chatbot-font-family: ${config.fontFamily};
             }
 
             /* Floating Chat Button */
@@ -46,7 +75,7 @@
                 justify-content: center;
                 transition: all 0.3s ease;
                 z-index: 999;
-                font-family: system-ui, -apple-system, sans-serif;
+                font-family: var(--chatbot-font-family);
             }
 
             .chatbot-toggle-btn:hover {
@@ -156,6 +185,27 @@
                 background: var(--chatbot-bot-msg-bg);
                 color: var(--chatbot-bot-msg-text);
                 border-bottom-left-radius: 4px;
+            }
+
+            /* Message Container (for avatar alignment) */
+            .chatbot-message-container {
+                display: flex;
+                align-items: flex-end;
+                gap: 8px;
+                max-width: 100%;
+            }
+
+            .chatbot-message-container.chatbot-user-container {
+                justify-content: flex-end;
+            }
+
+            .chatbot-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                object-fit: cover;
+                flex-shrink: 0;
+                margin-bottom: 2px;
             }
 
             /* Typing Indicator */
@@ -299,9 +349,7 @@
                         </svg>
                     </button>
                 </div>
-                <div class="chatbot-messages" id="chatbot-messages">
-                    <div class="chatbot-message chatbot-bot">¡Hola! ¿Cómo puedo ayudarte hoy?</div>
-                </div>
+                <div class="chatbot-messages" id="chatbot-messages"></div>
                 <div class="chatbot-input-area">
                     <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Escribe un mensaje..." autocomplete="off">
                     <button id="chatbot-send-btn" class="chatbot-send-btn">Enviar</button>
@@ -320,6 +368,11 @@
             this.history = [];
 
             this.init();
+
+            // Show initial message
+            if (this.config.initialMessage) {
+                this.addMessage(this.config.initialMessage, 'bot');
+            }
         }
 
         init() {
@@ -378,10 +431,22 @@
         }
 
         addMessage(text, sender) {
+            const container = document.createElement('div');
+            container.classList.add('chatbot-message-container', `chatbot-${sender}-container`);
+
+            if (sender === 'bot' && this.config.botAvatar) {
+                const avatar = document.createElement('img');
+                avatar.src = this.config.botAvatar;
+                avatar.classList.add('chatbot-avatar');
+                container.appendChild(avatar);
+            }
+
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('chatbot-message', `chatbot-${sender}`);
             msgDiv.textContent = text;
-            this.messagesContainer.appendChild(msgDiv);
+            container.appendChild(msgDiv);
+
+            this.messagesContainer.appendChild(container);
             this.scrollToBottom();
         }
 
@@ -395,18 +460,31 @@
         }
 
         showTypingIndicator() {
+            const container = document.createElement('div');
+            container.classList.add('chatbot-message-container', 'chatbot-bot-container');
+            container.id = 'chatbot-typing-container';
+
+            if (this.config.botAvatar) {
+                const avatar = document.createElement('img');
+                avatar.src = this.config.botAvatar;
+                avatar.classList.add('chatbot-avatar');
+                container.appendChild(avatar);
+            }
+
             const typingDiv = document.createElement('div');
             typingDiv.classList.add('chatbot-typing-indicator');
             typingDiv.id = 'chatbot-typing-indicator';
             typingDiv.innerHTML = '<span></span><span></span><span></span>';
-            this.messagesContainer.appendChild(typingDiv);
+            container.appendChild(typingDiv);
+
+            this.messagesContainer.appendChild(container);
             this.scrollToBottom();
         }
 
         hideTypingIndicator() {
-            const typingDiv = document.getElementById('chatbot-typing-indicator');
-            if (typingDiv) {
-                typingDiv.remove();
+            const typingContainer = document.getElementById('chatbot-typing-container');
+            if (typingContainer) {
+                typingContainer.remove();
             }
         }
     }

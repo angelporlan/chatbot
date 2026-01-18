@@ -150,20 +150,42 @@
 
         <section class="code-example">
             <h3>📝 Cómo Integrarlo</h3>
-            <p>Simplemente añade este script a tu página HTML:</p>
+            <p>Simplemente añade este script a tu página HTML con las opciones de personalización:</p>
             <pre><code>&lt;script 
   src="http://localhost:3000/widget.js" 
   data-api="http://localhost:3000" 
   data-tenant="tenant-1"
+  data-primary-color="#007bff"
+  data-secondary-color="#ffffff"
+  data-user-bubble-color="#007bff"
+  data-bot-bubble-color="#f0f0f0"
+  data-text-color="#333333"
+  data-font-family="Arial, sans-serif"
+  data-initial-message="¡Hola! ¿En qué puedo ayudarte?"
   data-bot-avatar="https://avatars.githubusercontent.com/u/106339954?v=4"
 &gt;&lt;/script&gt;</code></pre>
+
+            <h4 style="margin-top: 2rem;">Opciones de Personalización</h4>
+            <ul style="color: #666; line-height: 1.8;">
+                <li><strong>data-api:</strong> URL del API del chatbot</li>
+                <li><strong>data-tenant:</strong> ID del tenant/cliente</li>
+                <li><strong>data-primary-color:</strong> Color principal del widget</li>
+                <li><strong>data-secondary-color:</strong> Color de fondo del widget</li>
+                <li><strong>data-user-bubble-color:</strong> Color de las burbujas del usuario</li>
+                <li><strong>data-bot-bubble-color:</strong> Color de las burbujas del bot</li>
+                <li><strong>data-text-color:</strong> Color del texto</li>
+                <li><strong>data-font-family:</strong> Fuente tipográfica</li>
+                <li><strong>data-initial-message:</strong> Mensaje inicial del bot</li>
+                <li><strong>data-bot-avatar:</strong> URL del avatar del bot</li>
+            </ul>
         </section>
     </main>
 
-    <!-- Chatbot Widget - Embeddable Script -->
     <script src="http://localhost:3000/widget.js" data-api="http://localhost:3000" data-tenant="demo-tenant"
+        data-primary-color="#9333ea" data-user-bubble-color="#9333ea" data-bot-bubble-color="#f3e8ff"
+        data-text-color="#1f2937" data-font-family="Inter, system-ui, sans-serif"
+        data-initial-message="¿Cómo puedo ayudarte hoy?"
         data-bot-avatar="https://avatars.githubusercontent.com/u/106339954?v=4"></script>
-
 </body>
 
 </html>
